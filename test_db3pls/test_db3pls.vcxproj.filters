@@ -18,5 +18,13 @@
     <ClCompile Include="main_testdb3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="db3pls.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="db3pls.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
