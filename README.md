@@ -1,4 +1,5 @@
 # db3pls
+<pre>
 simple c++ classes to interface with db3pls files
 
 /* dBASE technical specifications
@@ -60,3 +61,5 @@ typedef struct dBASEFIELD_tag
     byte      deccnt        ;
     byte      hold2 [14]    ; // unused - usually 0's
   } dBASEFIELD ;
+
+  </pre>
