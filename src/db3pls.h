@@ -6,7 +6,12 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <errno.h>
 #include <string>
+
+#ifndef errno_t
+  typedef size_t errno_t;  
+#endif
 
 // valid dBASE tombstone values
 #define  db3EOF         0x1A

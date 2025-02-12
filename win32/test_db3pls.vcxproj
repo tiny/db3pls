@@ -128,11 +128,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main_testdb3.cpp" />
-    <ClCompile Include="db3pls.cpp" />
+    <ClCompile Include="../src/main_testdb3.cpp" />
+    <ClCompile Include="../src/db3pls.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="db3pls.h" />
+    <ClInclude Include="../src/db3pls.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

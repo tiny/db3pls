@@ -2,7 +2,14 @@
 */
 #include <stdio.h>
 #include "db3pls.h"
+#include <cstdio>
+#include <string>
+#include <cstring>
 #include <algorithm>
+
+#ifdef LINUX
+#  define sprintf_s  snprintf
+#endif
 
 void db_dump( const char *name )
 {
@@ -19,9 +26,7 @@ void db_dump( const char *name )
     printf("error opening product database\n");
     return ;
   }
-
   db.display_struct();
-
   db.goto_top();
 
 //  int16_t  iStock = db.get_field_no("STOCKNO");
@@ -50,6 +55,7 @@ void db_dump( const char *name )
   }
 
   db.close();
+  return ;
 } // :: db_dump
 
 int main()

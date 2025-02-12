@@ -2,10 +2,16 @@
 */
 #include "db3pls.h"
 #include <string.h>
+#include <cstdio>
+
+#ifdef LINUX
+#  define sprintf_s   snprintf
+#  define _stricmp    strcasecmp  
+#endif
 
 DB3pls::DB3pls()
 {
-  FILE* _inf = nullptr;
+  _inf = nullptr;
   memset(&_hdr, 0x00, sizeof(dBASEHEADER));
   _fields = nullptr;
 
@@ -15,6 +21,7 @@ DB3pls::DB3pls()
   _buf_sz = 0;
   _buf = nullptr ;
   _recNo = 0;
+  _err = 0 ;
 } // DB3pls [ctor]
 
 DB3pls::~DB3pls()
@@ -34,14 +41,24 @@ int16_t DB3pls::open(const char* fname)
   {
     return -1;
   }
+#ifdef LINUX
+  _inf = fopen( fname, "rb");
+  if (_inf == NULL) 
+    _err = errno ;
+#elif defined(WIN32)
   _err = fopen_s(&_inf, fname, "rb");
+#endif
   if (_err != 0)
   {
     return _err;
   }
 
   // read header
+#ifdef LINUX
+  int n = fread( &_hdr, 1, sizeof(_hdr), _inf);
+#elif defined(WIN32)
   int n = fread_s(&_hdr, sizeof(_hdr), 1, sizeof(_hdr), _inf);
+#endif
 
   // allocate field buffer
   _fields = (dBASEFIELD*)new uint8_t[_hdr.headLength];
@@ -49,7 +66,12 @@ int16_t DB3pls::open(const char* fname)
 
   // read fields
   int amt = _hdr.headLength - sizeof(dBASEHEADER);
+
+#ifdef LINUX
+  n = fread((void*)_fields, 1, amt, _inf);
+#elif defined(WIN32)
   n = fread_s((void*)_fields, amt+1, 1, amt, _inf);
+#endif
 
   _fname = fname;
   size_t  p1 = _fname.rfind('.');
@@ -70,6 +92,7 @@ void DB3pls::close()
   // cleanup
   _fname = "";
   fclose(_inf);
+  _inf = nullptr;
   delete _fields;
   _fields = nullptr;
   _nFields = 0;
@@ -122,33 +145,37 @@ int16_t DB3pls::goto_rec(uint32_t rec_no)
   if ((pos < _buf_pos) || ((pos + amt) > (_buf_pos + _buf_amt)))
   {
     fseek(_inf, (_buf_pos = pos), SEEK_SET);
+#ifdef LINUX
+    _buf_amt = fread(_buf, 1, _buf_sz, _inf);
+#elif defined(WIN32)
     _buf_amt = fread_s(_buf, _buf_sz, 1, _buf_sz, _inf);
+#endif
   }
   _recNo = rec_no;
   _rec_pos = (pos - _buf_pos);
 
   return 0;
-} // DB3pls::
+} // DB3pls::goto_rec
 
 int16_t DB3pls::goto_last()
 {
   return goto_rec(_hdr.nRecs);
-} // DB3pls::
+} // DB3pls::goto_last
 
 int16_t DB3pls::goto_next()
 {
   return goto_rec(_recNo+1);
-} // DB3pls::
+} // DB3pls::goto_next
 
 int16_t DB3pls::goto_prev()
 {
   return goto_rec(_recNo - 1);
-} // DB3pls::
+} // DB3pls::goto_prev
 
 int16_t DB3pls::goto_top()
 {
   return goto_rec(1);
-} // DB3pls::
+} // DB3pls::goto_top
 
 int16_t DB3pls::get_field_no(const char* name)
 {
@@ -165,7 +192,7 @@ int16_t DB3pls::get_field_no(const char* name)
 
   }
   return -2;
-} // DB3pls::
+} // DB3pls::get_field_no
 
 int16_t DB3pls::get_field_name(int16_t n, char* name)
 {
@@ -173,9 +200,13 @@ int16_t DB3pls::get_field_name(int16_t n, char* name)
   {
     return -1;
   }
+#ifdef LINUX
+  strncpy(name, _fields[n].name, 12);
+#elif defined(WIN32)
   strncpy_s(name, 11, _fields[n].name, 12);
+#endif
   return 0;
-} // DB3pls::
+} // DB3pls::get_field_name
 
 int16_t DB3pls::get_field_type(int16_t n, char& type)
 {
@@ -186,7 +217,7 @@ int16_t DB3pls::get_field_type(int16_t n, char& type)
   }
   type = _fields[n].type;
   return 0;
-} // DB3pls::
+} // DB3pls::get_field_type
 
 int16_t DB3pls::get_field_length(int16_t n, uint8_t& len)
 {
@@ -197,7 +228,7 @@ int16_t DB3pls::get_field_length(int16_t n, uint8_t& len)
   }
   len = _fields[n].length;
   return 0;
-} // DB3pls::
+} // DB3pls::get_field_length
 
 int16_t DB3pls::get_field(int16_t n, char* dst) // places current record's field into dst
 {
@@ -208,10 +239,14 @@ int16_t DB3pls::get_field(int16_t n, char* dst) // places current record's field
   }
   uint8_t* p = &_buf[_rec_pos];
 
+#ifdef LINUX
+  memcpy(dst, (char*) & p[_fields[n].offset], _fields[n].length);
+#elif defined(WIN32)
   memcpy_s(dst, _fields[n].length, (char*) & p[_fields[n].offset], _fields[n].length);
+#endif  
 
   dst[_fields[n].length] = '\0'; 
   return 0;
-} // DB3pls::
+} // DB3pls::get_field
 
 
