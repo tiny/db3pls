@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <string>
 
-#ifndef errno_t
+#ifdef LINUX
   typedef size_t errno_t;  
 #endif
 
